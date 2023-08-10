@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: remote-work
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: remote-work
+  template:
+    metadata:
+      labels:
+        app: remote-work
+    spec:
+      containers:
+        - name: remote
+          image: registry.datexis.com/s87182/remote_continual 
+          imagePullPolicy: "Always"
+          ports:
+            - containerPort: 22
+              name: ssh-port
+            - containerPort: 8000
+              name: app-port
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  [
+                    "/bin/sh",
+                    "-c",
+                    "cat /root/ssh-key/id_rsa.pub >> /root/.ssh/authorized_keys",
+                  ]
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+              memory: 100Gi
+              cpu: 10
+            requests:
+              nvidia.com/gpu: 1
+              memory: 80Gi
+              cpu: 5
+          volumeMounts:
+            - name: ssh-key
+              mountPath: /root/ssh-key
+            - name: cl-pvc-large
+              mountPath: /pvc
+            - name: dshm
+              mountPath: /dev/shm
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "0"
+      nodeSelector:
+        gpu: v100
+      imagePullSecrets:
+        - name: private-registry-auth
+      volumes:
+        - name: ssh-key
+          secret:
+            secretName: my-ssh-public-key
+            defaultMode: 256
+        - name: cl-pvc-large
+          persistentVolumeClaim:
+            claimName: cl-pvc-large
+        - name: dshm
+          emptyDir:
+            medium: Memory

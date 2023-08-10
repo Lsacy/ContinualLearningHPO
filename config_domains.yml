@@ -1,0 +1,106 @@
+# MIT License
+#
+# Copyright (c) 2023 BHT Berlin
+# Copyright (c) 2023 Datexis
+#
+
+# This YAML file is an example of a valid configuration file with sensible defaults
+# It should be copied to an experiment directory and modified accordingly
+
+experiment_name: 'domains-5k-1k-1k'
+
+dataset:
+  # Path to TSV files for train, dev and test
+  path: /pvc/data/continualLearning/domains #stratified
+  # Whether to randomzie the loaded dataframes of each dataset
+  randomzie: True
+  # default 'all', else o-r0nly sample n will loaded -> effects on the number of y labels!!!
+  num_entries: all
+  train_size: 5000
+  dev_size: 1000
+  test_size: 1000
+
+model:
+  # Model name (huggingface) or path to model checkpoint directory to load the model and tokenizer.
+  # If it's a name, it will download the checkpoint from huggingface.co
+  name_or_path: 'microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext'
+  tokenizer: 'microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext'
+  # if its a path, we need a base model
+  base_model: 'microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext' 
+  save_path: '/pvc/saved_models'
+
+paths:
+  hpo_optuna_study: sqlite:////pvc/optuna_study_remotework.db
+  tensorboard_path: '/pvc/tensorboard_output/'
+  hugging_output: /hugging_logs/
+  checkpoint_path: /pvc/checkpoints/
+  log_path: /pvc/optuna_best_results/
+  optuna_best_results: /pvc/optuna_best_results/
+  optuna_all_results: /pvc/optuna_checkpoints2/
+
+train:
+  # gradient_accumulation_steps
+  gradient_accumulation_steps: 4
+  # seed
+  seed: 1337
+  # number of trials for optuna
+  n_trials: 12
+  # warmup
+  warmup_steps: 750
+  # training step
+  training_steps: 1000000
+  # Batch size to use during training
+  batch_size: 8
+  # Validation metric to look at for model selection: intent_acc|slot_f1|loss. Defaults to 'slot_f1'
+  validation_metric: val_auc #torchmetrics.auroc #val_auc #roc_auc
+  # auroc average
+  average: macro
+  # checkpoint_callback mode
+  mode: max  # The mode to use for optimization, 'min' for minimizing the metric, 'max' for maximizing it
+  # Whether to freeze BERT weights. Defaults to False
+  freeze_bert: false
+  # The dropout probability to use on output embeddings before classification. float. Defaults to 0.1.
+  hidden_dropout: 0.3
+  attention_dropout: 0.5
+  # num of gpus
+  gpus: 1
+  # weight decay
+  weight_decay: 0.099839416
+  # Learning rate to train the model. float. Defaults to 1e-5.
+  learning_rate: 1e-5
+  # The number of epochs to train each language. Defaults to 20.
+  epochs_per_lang: 100
+  # The number of workers to use for data fetching. Optional, defaults to half the number of processors.
+  num_workers: 3
+  # pin memory
+  pin_memory: True
+  # shuffle
+  shuffle: True
+  # number of parallel jobs for training
+  n_jobs: 2 
+  # Whether to keep checkpoints in disk. Can be deactivated to save disk space. Defaults to True.
+  keep_checkpoints: False
+  # The sequence to train the model on.
+  #sequence: ['mimic_iv_domain_Certain_infectious_and_parasitic_diseases', 'mimic_iv_domain_Diseases_of_the_blood_and_blood-forming_organs_and_certain_disorders_involving_the_immune_mechanism', 'mimic_iv_domain_Symptoms_signs_and_abnormal_clinical_and_laboratory_findings_not_elsewhere_classified']
+  sequence: ['d', 'e', 'f']
+  sequence_mapping:
+    a: 'mimic_iv_domain_Certain_infectious_and_parasitic_diseases'
+    b: 'mimic_iv_domain_Diseases_of_the_blood_and_blood-forming_organs_and_certain_disorders_involving_the_immune_mechanism'
+    c: 'mimic_iv_domain_Symptoms_signs_and_abnormal_clinical_and_laboratory_findings_not_elsewhere_classified'
+    d: 'mimic_iv_domain_Pregnancy_childbirth_and_the_puerperium'
+    e: 'mimic_iv_domain_Diseases_of_the_circulatory_system'
+    f: 'mimic_iv_domain_Diseases_of_the_nervous_system'
+
+  # most similiar
+  # a, b, c,
+  # ['mimic_iv_domain_Certain_infectious_and_parasitic_diseases', 'mimic_iv_domain_Diseases_of_the_blood_and_blood-forming_organs_and_certain_disorders_involving_the_immune_mechanism', 'mimic_iv_domain_Symptoms_signs_and_abnormal_clinical_and_laboratory_findings_not_elsewhere_classified']
+
+  # most dissimilar
+  # d, e, f,
+  # ['mimic_iv_domain_Pregnancy_childbirth_and_the_puerperium', 'mimic_iv_domain_Diseases_of_the_circulatory_system', 'mimic_iv_domain_Diseases_of_the_nervous_system']
+
+  # early stopping
+  early_stopping_patience: 3
+
+dev:
+  shuffle: False

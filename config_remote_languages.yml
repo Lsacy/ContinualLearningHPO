@@ -1,0 +1,94 @@
+# MIT License
+#
+# Copyright (c) 2023 BHT Berlin
+# Copyright (c) 2023 Datexis
+#
+
+# This YAML file is an example of a valid configuration file with sensible defaults
+# It should be copied to an experiment directory and modified accordingly
+
+dataset:
+  # Path to TSV files for train, dev and test
+  path: /pvc/data/continualLearning/ #stratified
+  # Whether to randomzie the loaded dataframes of each dataset
+  randomzie: True
+  # default 'all', else only sample n will loaded -> effects on the number of y labels!!!
+  num_entries: 300
+  train_size: 5000
+  dev_size: 500
+  test_size: 500
+
+model:
+  # Model name (huggingface) or path to model checkpoint directory to load the model and tokenizer.
+  # If it's a name, it will download the checkpoint from huggingface.co
+  name_or_path: 'xlm-roberta-base'
+  tokenizer: 'xlm-roberta-base'
+  # path to saved models during optuna hpo
+
+available_pl_models:
+  xlm-roberta-base: XLMClassification_Optuna
+  microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext: PubMedBERT_Optuna,
+
+paths:
+  hpo_optuna_study: sqlite:////pvc/optuna_study_remotework.db
+  tensorboard_path: '/pvc/tensorboard_output/'
+  hugging_output: /hugging_logs/
+  checkpoint_path: /pvc/checkpoints/
+  log_path: /pvc/logs/
+  optuna_best_results: /pvc/optuna_best_results/ # 
+  optuna_all_results: /pvc/optuna_checkpoints2/
+
+experiment_name: 'ls-remotetest'
+
+
+train:
+  # gradient_accumulation_steps
+  gradient_accumulation_steps: 4
+  # seed
+  seed: 1337
+  # number of trials for optuna
+  n_trials: 2
+  # warmup
+  warmup_steps: 750
+  # training step
+  training_steps: 1000000
+  # Batch size to use during training
+  batch_size: 8
+  # Validation metric to look at for model selection: intent_acc|slot_f1|loss. Defaults to 'slot_f1'
+  validation_metric: val_auc #torchmetrics.auroc #val_auc #roc_auc
+  # auroc average
+  average: macro
+  # checkpoint_callback mode
+  mode: max  # The mode to use for optimization, 'min' for minimizing the metric, 'max' for maximizing it
+  # Whether to freeze BERT weights. Defaults to False
+  freeze_bert: false
+  # The dropout probability to use on output embeddings before classification. float. Defaults to 0.1.
+  hidden_dropout: 0.3
+  attention_dropout: 0.5
+  # num of gpus
+  gpus: 1
+  # weight decay
+  weight_decay: 0.099839416
+  # Learning rate to train the model. float. Defaults to 1e-5.
+  learning_rate: 1e-5
+  # The number of epochs to train each language. Defaults to 20.
+  epochs_per_lang: 2
+  # The number of workers to use for data fetching. Optional, defaults to half the number of processors.
+  num_workers: 1
+  # pin memory
+  pin_memory: True
+  # shuffle
+  shuffle: True
+  # number of parallel jobs for training
+  n_jobs: 2 
+  # Whether to keep checkpoints in disk. Can be deactivated to save disk space. Defaults to True.
+  keep_checkpoints: False
+  # The sequence to train the model on.
+  sequence: ['brazilian', 'mimic']
+  # output of training
+
+  # early stopping
+  early_stopping_patience: 3
+
+dev:
+  shuffle: False
